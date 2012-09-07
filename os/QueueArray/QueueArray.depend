@@ -1,0 +1,27 @@
+# depslib dependency file v1.0
+1346714258 source:/home/alex/Documents/school/os/QueueArray/main.cpp
+	<iostream>
+
+1346986244 source:/home/alex/Documents/school/os/QueueArray/src/QueueArray.cpp
+	"QueueArray.h"
+	<cstddef>
+	<iostream>
+	<stdio.h>
+	<stdlib.h>
+	<queue>
+
+1346714977 /home/alex/Documents/school/os/QueueArray/src/QueueArray.h
+	<queue>
+
+1346986132 source:/home/alex/Documents/school/os/QueueArray/src/main.cpp
+	<iostream>
+	"QueueArray.cpp"
+
+1346989525 /home/alex/Documents/school/os/QueueArray/src/QueueArray.cpp
+	"QueueArray.h"
+	<cstddef>
+	<iostream>
+	<stdio.h>
+	<stdlib.h>
+	<queue>
+
