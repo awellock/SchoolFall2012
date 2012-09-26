@@ -1,0 +1,4 @@
+comander pid is = 3066
+Comander: we have a child and its name is = 3067
+In pManger has pid of: 3067
+chid I is: 0
