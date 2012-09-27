@@ -13,7 +13,7 @@ struct com {
 	char val1;
 	char val2;
 	char val3;
-}comand;
+};
 main(){
 	//some random vars to help with stuf
 	int i=0, c1;
@@ -50,6 +50,7 @@ main(){
 	
 	//What should we send to the process manger how about some commands
 	while(cin){
+		com comand;
 		i++;
 		getline(cin, input);
 //		cout << input << endl;

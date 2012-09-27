@@ -1,4 +1,33 @@
-comander pid is = 3066
-Comander: we have a child and its name is = 3067
-In pManger has pid of: 3067
+comander pid is = 3672
+Comander: we have a child and its name is = 3673
+In pManger has pid of: 3673
 chid I is: 0
+child S
+child index of i is: 0
+chid I is: 1
+child P
+child index of i is: 1
+chid I is: 2
+child Q
+child index of i is: 2
+chid I is: 3
+child Q
+child index of i is: 3
+chid I is: 4
+child C
+child index of i is: 4
+chid I is: 5
+child C
+child index of i is: 5
+chid I is: 6
+child Q
+child index of i is: 6
+chid I is: 7
+child S
+child index of i is: 7
+chid I is: 8
+child Q
+child index of i is: 8
+chid I is: 9
+child P
+child index of i is: 9
