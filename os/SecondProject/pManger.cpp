@@ -56,7 +56,6 @@ main(int argc, char *argv[]){
 	comPipe[1] = atoi(argv[2]);
 	//boolean to term
 	done = false;
-	cout << "In pManger has pid of: " << getpid() << endl;
 	while(!done){
 		com tCom;
 		read(comPipe[0], (com *)&tCom, sizeof(com));
