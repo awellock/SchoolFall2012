@@ -91,7 +91,6 @@ main(){
 	
 	//Wait for lover to die
 	wait(&status);
-	wait(&status);
 	
 	//Yay we can die now
 }
