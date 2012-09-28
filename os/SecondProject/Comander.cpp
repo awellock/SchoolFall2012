@@ -44,7 +44,6 @@ main(){
 	}
 	else if (c1 == 0){
 		//We got to fork YAY!!
-		cout << "Comander: we have a child and its name is = " << getpid() << endl;
 		//Start up process manger
 		execl("pManger", "pManger", comR, comW, NULL);
 	}
@@ -83,6 +82,7 @@ main(){
 
 		//send stuff to our lover, so we can make kids.
 		write(comPipe[1], (void *)&comand, sizeof(com));
+		usleep(10);
 	}
 	//All comands have been sent
 	//close the pipe

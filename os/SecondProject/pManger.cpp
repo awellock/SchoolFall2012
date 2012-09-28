@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <math.h>
 #include "QueueArray.cpp"
 using namespace std;
 
@@ -27,8 +28,12 @@ struct pcb{
 	int rtime;
 	int priority;
 	int cpu_time;
+	bool exists;
 };
 int Time = 0;
+int fProc = 0;
+int tProcTime = 0;
+bool done;
 main(int argc, char *argv[]){
 	//set up pcb_tabel
 	vector<pcb> pcb_table (100);
@@ -50,14 +55,13 @@ main(int argc, char *argv[]){
 	comPipe[0] = atoi(argv[1]);
 	comPipe[1] = atoi(argv[2]);
 	//boolean to term
-	bool done = false;
+	done = false;
 	cout << "In pManger has pid of: " << getpid() << endl;
 	while(!done){
 		com tCom;
 		read(comPipe[0], (com *)&tCom, sizeof(com));
 		switch(tCom.type){
 			case 'S': { //s comand set up process
-				cout << "S" << endl;
 				pcb process;
 				//set fileds in the process
 				process.stime = Time;// start time is current time
@@ -67,21 +71,24 @@ main(int argc, char *argv[]){
 				process.priority = 0;//set priorty new process have prority of 0
 				process.quantum =1;//process with 0 priorty have quantum of 1
 				process.cpu_time = 0;//set total time on cpu
-				//break out of switch
+				process.exists = true;
 				pcb_table.at(process.pid) = process;
 				if(isFirst){
 					running_proc = &pcb_table.at(process.pid);
+					isFirst = false;
 				}
 				else
 					ready.Enqueue(process.pid, process.priority);
 				break;
 			}
 			case 'B': {//block the process
-				cout << "B" << endl;
 				switch(tCom.rid){
 					case 0 : {
 						//block on resorce 0
 						//equeue pid to prorty on block_reZ
+						if(running_proc->priority != 0)
+							running_proc->priority--;
+						running_proc->quantum = pow(2,running_proc->priority);
 						block_reZ.Enqueue(running_proc->pid, running_proc->priority);
 						int pid1 = ready.Dequeue();
 						running_proc = &pcb_table.at(pid1);
@@ -89,7 +96,9 @@ main(int argc, char *argv[]){
 					}
 					case 1 : {
 						//block on resorce 1
-						//equeue pid to prorty on block_reZ
+						if(running_proc->priority != 0)
+							running_proc->priority--;
+						running_proc->quantum = pow(2,running_proc->priority);
 						block_re1.Enqueue(running_proc->pid, running_proc->priority);
 						int pid1 = ready.Dequeue();
 						running_proc = &pcb_table.at(pid1);
@@ -97,7 +106,9 @@ main(int argc, char *argv[]){
 					}
 					case 2 : {
 						//block on resorce 2
-						//equeue pid to prorty on block_reZ
+						if(running_proc->priority != 0)
+							running_proc->priority--;
+						running_proc->quantum = pow(2,running_proc->priority);
 						block_re2.Enqueue(running_proc->pid, running_proc->priority);
 						int pid1 = ready.Dequeue();
 						running_proc = &pcb_table.at(pid1);
@@ -107,16 +118,12 @@ main(int argc, char *argv[]){
 					break;
 			}
 			case 'U': {//Unblock the process
-				cout << "U" << endl;
 				switch(tCom.rid){
 					case 0 : {
 						//block on resorce 0
 						//equeue pid to prorty on block_reZ
 						int pid1 = block_reZ.Dequeue();
 						pcb* pcb1 = &pcb_table.at(pid1);
-						if(pcb1->priority != 0)//reset priority and recalc the quantum
-							pcb1->priority--;
-						pcb1->quantum = 2^pcb1->priority;
 						ready.Enqueue(pcb1->pid, pcb1->priority);
 						break;
 					}
@@ -125,20 +132,14 @@ main(int argc, char *argv[]){
 						//equeue pid to prorty on block_reZ
 						int pid1 = block_re1.Dequeue();
 						pcb* pcb1 = &pcb_table.at(pid1);
-						if(pcb1->priority != 0)
-							pcb1->priority--;
-						pcb1->quantum = 2^pcb1->priority;
 						ready.Enqueue(pcb1->pid, pcb1->priority);
 						break;
 					}
 					case 2 : {
 						//block on resorce 2
 						//equeue pid to prorty on block_reZ
-						int pid1 = block_re1.Dequeue();
+						int pid1 = block_re2.Dequeue();
 						pcb* pcb1 = &pcb_table.at(pid1);
-						if(pcb1->priority != 0)
-							pcb1->priority--;
-						pcb1->quantum = 2^pcb1->priority;
 						ready.Enqueue(pcb1->pid, pcb1->priority);
 						break;
 					}
@@ -146,7 +147,6 @@ main(int argc, char *argv[]){
 					break;
 			}
 			case 'C' : {//exacute a comand on the current running process
-				cout << "C" << endl;
 				switch(tCom.cmd){
 					case 'A': {//add the running process value by the value passed by the comand
 						running_proc->value = running_proc->value + tCom.value;
@@ -167,29 +167,30 @@ main(int argc, char *argv[]){
 				}
 			}
 			case 'Q': {
-				cout<< "Time was: "<< Time << endl;
-				cout << "Q" << endl;
 				Time++;
-				cout << "Time is now: " <<Time << endl;
+				if(!running_proc->exists)
+					break;
+				running_proc->quantum--;//the process was not done so reduce its quantum
 				running_proc->rtime--;
 				running_proc->cpu_time++;
 				if(running_proc->rtime <= 0){//if done running set finshed time and swap out
 					running_proc->etime = Time;
+					fProc++;
+					tProcTime += running_proc->etime - running_proc->stime;
 					int pid1 = ready.Dequeue();//pid of the next ready process
 					running_proc = &pcb_table.at(pid1);//set running process to the new one
+
 				}
-				else{
-					running_proc->quantum--;//the process was not done so reduce its quantum
-					if(running_proc->quantum <=0){//if quantum is now zero lower priority and swap processes
-						if(running_proc->priority < 3)
-							running_proc->priority++;//set to lower priority
-						//reset quantum
-						running_proc->quantum = 2^running_proc->priority;
-						ready.Enqueue(running_proc->pid, running_proc->priority);//replace the current procces on the ready queue
-						int pid1 = ready.Dequeue();//get pid of the new process
-						running_proc = &pcb_table.at(pid1);//set runnig pocess to the new one
-					}
+				else if(running_proc->quantum <=0){//if quantum is now zero lower priority and swap processes
+					if(running_proc->priority < 3)
+						running_proc->priority++;//set to lower priority
+					//reset quantu
+					running_proc->quantum = pow(2,running_proc->priority);
+					ready.Enqueue(running_proc->pid, running_proc->priority);//replace the current procces on the ready queue
+					int pid1 = ready.Dequeue();//get pid of the new process
+					running_proc = &pcb_table.at(pid1);//set runnig pocess to the new one
 				}
+				
 				break;		
 			}
 			case 'P': {
@@ -213,64 +214,62 @@ main(int argc, char *argv[]){
 
 					cout << "\nBLOCKED PROCESS:" << endl;
 					cout << "Queue of processes Blocked for resource 0:"<< endl;
-					for(int j = 0; j < 4; j++){//block for resource 0;
-						int *cbuf;
-						cbuf = block_reZ.Qstate(j);//what is in ready for priorty 0
-						if(block_reZ.Qsize(j)== 0){
-							continue;
-						} 
-						for(int i = 0; i < block_reZ.Qsize(j); i++){
-							int pid1 = cbuf[i]; //pid of the process that is in that que
-							pcb process = pcb_table.at(pid1);//get the process
-							if(process.pid != 0)//if it exist print it
-								cout << process.pid <<"\t" << process.priority << "\t\t" << process.value << "\t\t" << process.stime << "\t\t" << process.cpu_time << endl;
-						}
+					
+					cout << "PID\tPriority\tValue\tStart Time\t Total CPU time" << endl;
+					int *cbuf;
+					for(int j = 0; j < block_reZ.Asize(); j++){//block for resource 0;
+						if(block_reZ.Qsize(j)){
+	                                                cbuf = block_reZ.Qstate(j);//what is in ready for priorty 0
+                                                	for(int i = 0; i < block_reZ.Qsize(j); i++){
+                                                        	int pid1 = cbuf[i]; //pid of the process that is in that que
+                                                      	 	pcb process = pcb_table.at(pid1);//get the process
+								cout << "Should print stuff for process: "<<pid1<<endl;
+                                                                cout << process.pid <<"\t" << process.priority << "\t\t" << process.value << "\t\t" << process.stime << "\t\t" << process.cpu_time << endl;
+							}
+                                                }
 					}
 					cout << "\nQueue of processes blocked for resource 1:" << endl;
- 					for(int j = 0; j < 4; j++){//block for resource 0;
-                                                int *cbuf;
-                                                cbuf = block_re1.Qstate(j);//what is in ready for priorty 0
-                                                if(block_re1.Qsize(j)== 0){
-                                                        continue;
-                                                }
-                                                for(int i = 0; i < block_re1.Qsize(j); i++){
-                                                        int pid1 = cbuf[i]; //pid of the process that is in that que
-                                                        pcb process = pcb_table.at(pid1);//get the process
-                                                      if(process.pid != 0)//if it exist print it
+					cout << "PID\tPriority\tValue\tStart Time\t Total CPU time" << endl;
+					for(int j = 0; j < block_re1.Asize(); j++){//block for resource 0;
+						if(block_re1.Qsize(j)){
+	                                                cbuf = block_re1.Qstate(j);//what is in ready for priorty 0
+                                                	for(int i = 0; i < block_re2.Qsize(j); i++){
+                                                        	int pid1 = cbuf[i]; //pid of the process that is in that que
+                                                      	 	pcb process = pcb_table.at(pid1);//get the process
                                                                 cout << process.pid <<"\t" << process.priority << "\t\t" << process.value << "\t\t" << process.stime << "\t\t" << process.cpu_time << endl;
+							}
                                                 }
-                                        }
+					}
+
 					cout << "\nQueue of processes blocked for resource 2:"<<endl;
-					for(int j = 0; j < 4; j++){//block for resource 0;
-                                                int *cbuf;
-                                                cbuf = block_re2.Qstate(j);//what is in ready for priorty 0
-                                                if(block_re2.Qsize(j)== 0){
-                                                        continue;
-                                                }
-                                                for(int i = 0; i < block_re2.Qsize(j); i++){
-                                                        int pid1 = cbuf[i]; //pid of the process that is in that que
-                                                        pcb process = pcb_table.at(pid1);//get the process
-                                                      if(process.pid != 0)//if it exist print it
+					cout << "PID\tPriority\tValue\tStart Time\t Total CPU time" << endl;
+					for(int j = 0; j < block_re2.Asize(); j++){//block for resource 0;
+						if(block_re2.Qsize(j)){
+	                                                cbuf = block_re2.Qstate(j);//what is in ready for priorty 0
+                                                	for(int i = 0; i < block_re2.Qsize(j); i++){
+                                                        	int pid1 = cbuf[i]; //pid of the process that is in that que
+                                                      	 	pcb process = pcb_table.at(cbuf[i]);//get the process
                                                                 cout << process.pid <<"\t" << process.priority << "\t\t" << process.value << "\t\t" << process.stime << "\t\t" << process.cpu_time << endl;
+							}
                                                 }
                                         }
 					cout <<"\nPROCESSES READY TO EXECUTE:" << endl;
 
-					for(int j = 0; j < 4; j++){
-						int *cbuf;
-						cbuf = ready.Qstate(j);//what is in ready for priorty 0
-						if(ready.Qsize(j)== 0){
+					for(int j = 0; j < ready.Asize(); j++){
+						if(ready.Qsize(j)){
+							cout << "Queue of process with priorty " << j+1 << ":" << endl;
+							cbuf = ready.Qstate(j);//what is in ready for priorty 0
+							for(int i = 0; i<ready.Qsize(j); i++){
+								cout << "PID\tPriority\tValue\tStart Time\t Total CPU time" << endl;
+								pcb process = pcb_table.at(cbuf[i]);
+								cout << process.pid <<"\t" << process.priority << "\t\t" << process.value << "\t\t" << process.stime << "\t\t" << process.cpu_time << endl;
+							}
+						}
+						else{
 							cout << "Queue of processes with priority " << j+1 << " is empty" <<endl;
 							continue;
-						} 
-						else
-							cout << "Queue of processes with prority " << j+1 << " :" << endl;
-						for(int i = 0; i < ready.Qsize(j); i++){
-							int pid1 = cbuf[i]; //pid of the process that is in that que
-							pcb process = pcb_table.at(pid1);//get the process
-							if(process.pid != 0)//if it exist print it
-								cout << process.pid <<"\t" << process.priority << "\t\t" << process.value << "\t\t" << process.stime << "\t\t" << process.cpu_time << endl;
 						}
+									
 					}
 					
 				}
@@ -279,10 +278,10 @@ main(int argc, char *argv[]){
 			}
 			case 'T': {
 				done = true;
+				cout << "Totatl finshed porcesses: " << fProc<< endl;
+				cout << "Avarage turn around time: " <<  tProcTime/((float)fProc)<< endl;
 				break;
 			}
-			default: 
-				break;	
 		}
 	}
 	
