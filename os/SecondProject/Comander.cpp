@@ -10,9 +10,12 @@ using namespace std;
 //structs for passing comands easy mode.
 struct com {
 	char type;
-	char val1;
-	char val2;
-	char val3;
+	char cmd;
+	int pid;
+	int value;
+	int Time;
+	int rid;
+	
 };
 main(){
 	//some random vars to help with stuf
@@ -46,22 +49,39 @@ main(){
 		execl("pManger", "pManger", comR, comW, NULL);
 	}
 	//Time for a snack
-	cout << "comander pid is = " << getpid() << endl;
 	
 	//What should we send to the process manger how about some commands
-	while(cin){
-		com comand;
-		i++;
-		getline(cin, input);
-//		cout << input << endl;
-		comand.type = input[0];
-		comand.val1 = input[2];
-		comand.val2 = input[4];
-		comand.val3 = input[6];
-	//	cout << "\tThe type is: \t" << comand.type << endl;
-	//	cout << "\tVal1 is: \t" << comand.val1 << endl;
-	//	cout << "\tVal2 is: \t" << comand.val2 << endl;
-	//	cout << "\tVal3 is: \t" << comand.val3 << endl; 
+	com comand;
+	while(cin >> comand.type){
+		switch (comand.type){
+			case 'S' : {
+				cin >> comand.pid >> comand.value >> comand.Time;
+				break;
+			}
+			case 'B' : {
+				cin >> comand.rid;
+				break;
+			}
+			case 'U' : {
+				cin >> comand.rid;
+				break;
+			}
+			case 'Q' : {
+				break;
+			}
+			case 'C' : {
+				cin >> comand.cmd >> comand.value;
+				break;
+			}
+			case 'P' : {
+				break;
+			}
+			case 'T' : {
+				break;
+			}
+		}
+
+		//send stuff to our lover, so we can make kids.
 		write(comPipe[1], (void *)&comand, sizeof(com));
 	}
 	//All comands have been sent
